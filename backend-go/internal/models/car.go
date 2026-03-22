@@ -8,6 +8,12 @@ type Car struct {
 	PriceRub int    `json:"priceRub"`
 }
 
+type NewCarRequest struct {
+	Brand    string `json:"brand"`
+	Model    string `json:"model"`
+	Year     int    `json:"year"`
+	PriceRub int    `json:"priceRub"`
+}
 // type Car struct {	
 // 	Department        string           `json:"department"`
 // 	Resource          string           `json:"resource"`

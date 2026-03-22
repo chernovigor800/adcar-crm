@@ -1,0 +1,29 @@
+services:
+  
+  db:
+    image: postgres:16
+    container_name: adcar_crm_db
+    environment:
+      POSTGRES_DB: adcar_crm
+      POSTGRES_USER: igor
+      POSTGRES_PASSWORD: igor
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: adcar_crm_backend
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+    environment:
+      DATABASE_URL: "host=db user=igor password=igor dbname=adcar_crm sslmode=disable"
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
