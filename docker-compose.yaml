@@ -10,19 +10,27 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql/data      
+      - ./init-sql:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U igor -d adcar_crm"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
 
   backend:
     build:
-      context: .
+      context: ./backend-go
       dockerfile: Dockerfile
     container_name: adcar_crm_backend
     ports:
       - "8080:8080"
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     environment:
-      DATABASE_URL: "host=db user=igor password=igor dbname=adcar_crm sslmode=disable"
+      DATABASE_URL: "host=db user=postgres password=postgres dbname=adcar_crm sslmode=disable"
     restart: unless-stopped
 
 volumes:
