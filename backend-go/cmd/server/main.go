@@ -12,7 +12,7 @@ import (
 )
 
 func main() {
-	pool, err := pgxpool.New(context.Background(), "user=igor password=igor host=db dbname=adcar_crm sslmode=disable")
+	pool, err := pgxpool.New(context.Background(), "user=postgres password=postgres host=db dbname=adcar_crm sslmode=disable")
 	if err != nil {
 		panic(err)
 	}

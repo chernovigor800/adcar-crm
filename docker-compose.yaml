@@ -5,15 +5,15 @@ services:
     container_name: adcar_crm_db
     environment:
       POSTGRES_DB: adcar_crm
-      POSTGRES_USER: igor
-      POSTGRES_PASSWORD: igor
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data      
       - ./init-sql:/docker-entrypoint-initdb.d
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U igor -d adcar_crm"]
+      test: ["CMD-SHELL", "pg_isready -U postgres -d adcar_crm"]
       interval: 10s
       timeout: 5s
       retries: 5
