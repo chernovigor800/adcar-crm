@@ -1,0 +1,29 @@
+{
+  "manifest_version": 3,
+  "name": "AdCar AutoCJ Parser",
+  "version": "1.0", 
+  "description": "Парсит AutoCJ → сохраняет в AdCar CRM",
+  "permissions": [
+    "storage",
+    "activeTab"
+  ],
+  "host_permissions": [
+    "*://autocj.co.jp/*",
+    "*://*.autocj.co.jp/*",
+    "http://localhost:8080/*",
+    "http://localhost:*/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "options_ui": {
+    "page": "options.html",
+    "open_in_tab": true
+  },
+  "content_scripts": [{
+    "matches": ["*://autocj.co.jp/*", "*://*.autocj.co.jp/*"],
+    "js": ["content.js"],
+    "run_at": "document_end",
+    "all_frames": false
+  }]
+}
