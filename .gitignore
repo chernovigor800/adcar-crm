@@ -1,0 +1,31 @@
+# IDE
+.idea/
+.vscode/
+*.sw[p]
+*.swo
+
+# Python
+**/*.pyc
+__pycache__/
+*.py[co]
+*.pyc
+
+# Django
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+media/
+.static/
+*.log
+
+# Environment
+.env
+.env.local
+.env.development
+.env.production
+
+# Project-specific
+frontend-django/.idea/
+frontend-django/__pycache__/
+frontend-django/frontend/__pycache__/
+frontend-django/adcar_crm/__pycache__/
