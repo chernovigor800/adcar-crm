@@ -1,6 +1,6 @@
-chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+mchrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === 'saveCar') {
-    const host = request.adcarHost || 'http://localhost:8080/';
+    const host = request.adcarHost || 'http://localhost:8080/api/v1/cars/';
     
     (async () => {
       try {
@@ -24,6 +24,6 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       }
     })();
     
-    return true; // Обязательно для async ответа!
+    return true;
   }
 });

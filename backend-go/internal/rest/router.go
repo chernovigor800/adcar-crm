@@ -7,6 +7,10 @@ import (
 )
 
 func SetupHTTPRouter(r *gin.Engine, svc *service.CarService) {
-	r.GET("/",   handlers.GetCarsHandler(svc))
-	r.POST("/",  handlers.CreateCarHandler(svc))
+	api := r.Group("/api/v1")
+	cars := api.Group("/cars")
+	{
+		cars.GET("/",  handlers.GetCarsHandler(svc))
+		cars.POST("/", handlers.CreateCarHandler(svc))
+	}
 }

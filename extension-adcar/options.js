@@ -14,8 +14,8 @@ async function saveSettings() {
 async function loadSettings() {
     try {
         const result = await chrome.storage.sync.get(['department','adcarHost']);
-        document.getElementById('department').value = result.department || 'Импорт Япония';
-        document.getElementById('host').value = result.adcarHost || 'http://localhost:8080';
+        document.getElementById('department').value = result.department || 'NSK';
+        document.getElementById('host').value = result.adcarHost || 'http://localhost:8080/api/v1/cars/';
     } catch(err) { console.error(err); }
 }
 

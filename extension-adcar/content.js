@@ -1,6 +1,10 @@
-// content.js для AdCar AutoCJ Parser
 (function() {
-    'use strict';    
+    'use strict';
+
+    if (!window.location.pathname.startsWith("/usedcar")) {
+        console.log("AdCar: processAutocomCars — not on usedcar page, skipping");
+        return;
+    }    
 
     function toSnakeCase(text) {
         return text.replace(/\s+/g, ' ')
@@ -22,7 +26,7 @@
         const result = await chrome.storage.sync.get(['department', 'adcarHost']);
         const settings = {
             department: result.department || 'Импорт Япония',
-            adcarHost: result.adcarHost || 'http://localhost:8080'
+            adcarHost: result.adcarHost || 'http://localhost:8080/api/v1/cars/'
         };
 
         console.log('🔧 Settings:', settings); // Дебаг
@@ -109,73 +113,107 @@
             photos: data.photos.slice(0, 10),
             price: data.price,
             price_currency: data.currency,
-            additional_context: `AutoCJ парсер v2.0 (${new Date().toISOString()})`
+            additional_context: JSON.stringify(data)
         };
 
-        console.log('📤 AdCar данные:', adcarCar);
+        console.log('AdCar данные:', adcarCar);
 
         // Кнопка
         if (document.querySelector('.adcar-save')) return;
+
         const sendButton = document.createElement('div');
         sendButton.className = 'adcar-save';
-        sendButton.innerHTML = '🚗 <strong>Сохранить в AdCar CRM</strong>';
-        sendButton.style.cssText = `
-            position: fixed; top: 20px; right: 20px; z-index: 10001;
-            background: linear-gradient(135deg, #4CAF50, #45a049); 
-            color: white; padding: 15px 25px; border-radius: 25px;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            font-size: 14px; font-weight: 600; cursor: pointer;
-            box-shadow: 0 6px 20px rgba(76, 175, 80, 0.4);
-            border: none; transition: all 0.3s ease;
-            backdrop-filter: blur(10px);
-        `;
-        sendButton.addEventListener('mouseover', () => sendButton.style.transform = 'scale(1.05)');
-        sendButton.addEventListener('mouseout', () => sendButton.style.transform = 'scale(1)');
 
-        // 🔥 БЕЗ CORS ПРОБЛЕМ — через background script!
+        // Стиль как у daecha: фиксированная, маленькая, градиент, без тяжёлого blur
+        sendButton.style.cssText = `
+            position: fixed;
+            top: 5px;
+            left: 5px;
+            z-index: 2147483647;
+
+            width: 140px;
+            height: 40px;
+
+            background: linear-gradient(135deg, #007bff, #0056b3);
+            color: white;
+            font-weight: 600;
+            font-size: 13px;
+
+            border-radius: 12px;
+            border: none;
+            outline: none;
+            cursor: pointer;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            white-space: pre-line;
+            text-align: center;
+            line-height: 1.2;
+
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 25px rgba(0, 123, 255, 0.4);
+        `;
+
+        // Анимация при наведении
+        sendButton.addEventListener('mouseenter', () => {
+            sendButton.style.transform = 'translateY(-2px)';
+            sendButton.style.boxShadow = '0 12px 30px rgba(0, 123, 255, 0.5)';
+        });
+        sendButton.addEventListener('mouseleave', () => {
+            sendButton.style.transform = '';
+            sendButton.style.boxShadow = '0 8px 25px rgba(0, 123, 255, 0.4)';
+        });
+
+        // Текст кнопки — можно оставить с иконкой, если хочешь, или просто текст
+        sendButton.innerText = 'Сохранить\nв AdCar-CRM';
+
+        // Логика отправки — остаётся почти та же, меняем только визуал
         sendButton.onclick = () => {
-            sendButton.innerHTML = '⏳ Сохраняем...';
             sendButton.style.background = 'linear-gradient(135deg, #2196F3, #1976D2)';
-            sendButton.style.transform = 'scale(1)';
-            
-            chrome.runtime.sendMessage({
-                action: 'saveCar',
-                data: adcarCar,
-                adcarHost: settings.adcarHost
-            }, (response) => {
-                // Проверяем ошибки расширения
-                if (chrome.runtime.lastError) {
-                    console.error('Extension error:', chrome.runtime.lastError.message);
-                    sendButton.innerHTML = '❌ Ошибка расширения';
-                    sendButton.style.background = 'linear-gradient(135deg, #f44336, #d32f2f)';
-                } 
-                // Успешное сохранение
-                else if (response?.action === 'carSaved') {
-                    console.log('✅ Сохранено!', response.result);
-                    sendButton.innerHTML = '✅ <strong>Сохранено!</strong>';
-                    sendButton.style.background = 'linear-gradient(135deg, #4CAF50, #45a049)';
-                    setTimeout(() => sendButton.remove(), 3000);
-                } 
-                // Ошибка сервера
-                else if (response?.action === 'saveError') {
-                    console.error('Server error:', response.error);
-                    sendButton.innerHTML = `❌ ${response.error}`;
-                    sendButton.style.background = 'linear-gradient(135deg, #f44336, #d32f2f)';
-                } 
-                // Неизвестный ответ
-                else {
-                    sendButton.innerHTML = '❌ Неизвестная ошибка';
-                    sendButton.style.background = 'linear-gradient(135deg, #f44336, #d32f2f)';
-                }
-                
-                // Сброс кнопки через 3 сек при ошибке
-                setTimeout(() => {
-                    if (sendButton.parentNode && sendButton.innerHTML.includes('Ошибка')) {
-                        sendButton.innerHTML = '🚗 <strong>Сохранить в AdCar CRM</strong>';
-                        sendButton.style.background = 'linear-gradient(135deg, #4CAF50, #45a049)';
+            sendButton.style.transform = 'none';            
+
+            chrome.runtime.sendMessage(
+                {
+                    action: 'saveCar',
+                    data: adcarCar,
+                    adcarHost: settings.adcarHost,
+                },
+                (response) => {
+                    if (chrome.runtime.lastError) {
+                        console.error('Extension error:', chrome.runtime.lastError.message);
+                        sendButton.style.background = 'linear-gradient(135deg, #f44336, #d32f2f)';
+                        sendButton.innerText = 'Ошибка\nрасширения';
+                    } else if (response?.action === 'carSaved') {
+                        console.log('Сохранено!', response.result);
+                        sendButton.style.background = 'linear-gradient(135deg, #28a745, #1e7e34)';
+                        sendButton.innerText = 'Сохранено!';
+                        setTimeout(() => sendButton.remove(), 2000);
+                    } else if (response?.action === 'saveError') {
+                        console.error('Server error:', response.error);
+                        sendButton.style.background = 'linear-gradient(135deg, #f44336, #d32f2f)';
+                        sendButton.innerText = 'Ошибка\nсервера';
+                    } else {
+                        sendButton.style.background = 'linear-gradient(135deg, #f44336, #d32f2f)';
+                        sendButton.innerText = 'Неизвестная\nошибка';
                     }
-                }, 3000);
-            });
+
+                    // Сброс через 3 секунды при ошибке
+                    setTimeout(() => {
+                        if (
+                            sendButton.parentNode &&
+                            (
+                                sendButton.innerText.includes('Ошибка') ||
+                                sendButton.innerText.includes('Неизвестная')
+                            )
+                        ) {
+                            sendButton.style.background = 'linear-gradient(135deg, #007bff, #0056b3)';
+                            sendButton.style.transform = '';
+                            sendButton.innerText = 'Сохранить\nв AdCar';
+                        }
+                    }, 3000);
+                }
+            );
         };
 
         document.body.appendChild(sendButton);
